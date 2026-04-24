@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import type { AnalyzedFoodItem } from '@/lib/types';
+import { inferCategory } from '@/lib/categories';
 import { randomUUID } from 'crypto';
 
 export const runtime = 'nodejs';
@@ -124,6 +125,7 @@ export async function POST(req: NextRequest) {
       protein_g: item.protein_g,
       carbs_g: item.carbs_g,
       fat_g: item.fat_g,
+      category: item.category ?? inferCategory(item.name),
     }));
 
     const { error: itemsError } = await supabase.from('meal_items').insert(mealItems);

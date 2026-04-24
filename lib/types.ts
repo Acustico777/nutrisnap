@@ -8,6 +8,15 @@ export interface Profile {
   daily_carbs_g: number;
   daily_fat_g: number;
   created_at: string;
+  age: number | null;
+  weight_kg: number | null;
+  height_cm: number | null;
+  sex: 'male' | 'female' | null;
+  activity_level: 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active';
+  diet_preference: string;
+  excluded_foods: string[];
+  bmr: number | null;
+  tdee: number | null;
 }
 
 export interface Meal {
@@ -35,6 +44,7 @@ export interface MealItem {
   protein_g: number;
   carbs_g: number;
   fat_g: number;
+  category?: 'vegetables' | 'meat' | 'fish' | 'fruit' | 'other';
 }
 
 export interface InviteCode {
@@ -54,6 +64,7 @@ export interface AnalyzedFoodItem {
   protein_g: number;
   carbs_g: number;
   fat_g: number;
+  category?: 'vegetables' | 'meat' | 'fish' | 'fruit' | 'other';
 }
 
 export interface AnalyzeResponse {
@@ -74,4 +85,44 @@ export interface DailyTotals {
   protein_g: number;
   carbs_g: number;
   fat_g: number;
+}
+
+export interface MealPlanMeal {
+  meal_type: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  name: string;
+  description: string;
+  calories: number;
+  protein_g: number;
+  carbs_g: number;
+  fat_g: number;
+  ingredients: string[];
+}
+
+export interface MealPlanDay {
+  day_label: string;
+  meals: MealPlanMeal[];
+}
+
+export interface MealPlan {
+  id: string;
+  user_id: string;
+  plan_type: 'daily' | 'weekly';
+  diet_preference: string | null;
+  target_calories: number | null;
+  plan_data: { days: MealPlanDay[] };
+  created_at: string;
+}
+
+export interface CategoryBreakdown {
+  category: 'vegetables' | 'meat' | 'fish' | 'fruit' | 'other';
+  label: string;
+  calories: number;
+  count: number;
+  percent: number;
+}
+
+export interface FoodSuggestion {
+  category: 'vegetables' | 'meat' | 'fish' | 'fruit' | 'other';
+  reason: string;
+  examples: string[];
 }

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, ChevronDown } from 'lucide-react';
@@ -123,8 +124,15 @@ export default function ScanPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            className="space-y-3"
           >
             <PhotoCapture onCapture={handleCapture} />
+            <p className="text-center text-sm text-muted-foreground">
+              Preferisci inserire manualmente?{' '}
+              <Link href="/add" className="text-primary-500 hover:underline font-medium">
+                → Aggiungi a mano
+              </Link>
+            </p>
           </motion.div>
         )}
 

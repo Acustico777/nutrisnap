@@ -2,26 +2,20 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Camera, History, Settings } from 'lucide-react';
+import { Home, Camera, PieChart, CalendarDays, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-const navItems = [
-  { href: '/dashboard', label: 'Home', icon: Home },
-  { href: '/history', label: 'Storico', icon: History },
-  { href: '/settings', label: 'Impostazioni', icon: Settings },
-];
 
 export function BottomNav() {
   const pathname = usePathname();
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card/80 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-md items-center justify-around px-4 py-2">
+      <div className="mx-auto flex max-w-md items-center justify-around px-2 py-2">
         {/* Home */}
         <Link
           href="/dashboard"
           className={cn(
-            'flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-colors',
+            'flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors',
             pathname === '/dashboard'
               ? 'text-primary-500'
               : 'text-muted-foreground hover:text-foreground'
@@ -29,6 +23,20 @@ export function BottomNav() {
         >
           <Home className="h-5 w-5" />
           <span className="text-[10px] font-medium">Home</span>
+        </Link>
+
+        {/* Insights */}
+        <Link
+          href="/insights"
+          className={cn(
+            'flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors',
+            pathname === '/insights'
+              ? 'text-primary-500'
+              : 'text-muted-foreground hover:text-foreground'
+          )}
+        >
+          <PieChart className="h-5 w-5" />
+          <span className="text-[10px] font-medium">Insights</span>
         </Link>
 
         {/* Scan — center prominent button */}
@@ -57,25 +65,25 @@ export function BottomNav() {
           </span>
         </Link>
 
-        {/* History */}
+        {/* Plan */}
         <Link
-          href="/history"
+          href="/plan"
           className={cn(
-            'flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-colors',
-            pathname === '/history'
+            'flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors',
+            pathname === '/plan'
               ? 'text-primary-500'
               : 'text-muted-foreground hover:text-foreground'
           )}
         >
-          <History className="h-5 w-5" />
-          <span className="text-[10px] font-medium">Storico</span>
+          <CalendarDays className="h-5 w-5" />
+          <span className="text-[10px] font-medium">Piano</span>
         </Link>
 
         {/* Settings */}
         <Link
           href="/settings"
           className={cn(
-            'flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-colors',
+            'flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors',
             pathname === '/settings'
               ? 'text-primary-500'
               : 'text-muted-foreground hover:text-foreground'

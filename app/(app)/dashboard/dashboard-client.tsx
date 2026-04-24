@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { UtensilsCrossed } from 'lucide-react';
+import { UtensilsCrossed, PieChart, CalendarDays } from 'lucide-react';
 import { ProgressRing } from '@/components/progress-ring';
 import { MacroBar } from '@/components/macro-bar';
 import { MealCard } from '@/components/meal-card';
@@ -120,9 +121,37 @@ export function DashboardClient({ profile, meals: initialMeals }: Props) {
         </div>
       </motion.div>
 
+      {/* Quick actions */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25 }}
+        className="flex gap-3"
+      >
+        <Link
+          href="/insights"
+          className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 text-sm font-medium text-foreground hover:bg-muted/40 transition-colors"
+        >
+          <PieChart className="h-4 w-4 text-primary-500" />
+          Insights
+        </Link>
+        <Link
+          href="/plan"
+          className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 text-sm font-medium text-foreground hover:bg-muted/40 transition-colors"
+        >
+          <CalendarDays className="h-4 w-4 text-primary-500" />
+          Piano pasti
+        </Link>
+      </motion.div>
+
       {/* Today's meals */}
       <div>
-        <h2 className="text-base font-semibold text-foreground mb-3">Pasti di oggi</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-semibold text-foreground">Pasti di oggi</h2>
+          <Link href="/history" className="text-xs text-primary-500 hover:underline">
+            Storico →
+          </Link>
+        </div>
 
         {meals.length === 0 ? (
           <motion.div
