@@ -4,21 +4,28 @@ import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { Copy, Check, LogOut, Plus, Shield, Calculator, Save, X, Trash2, ChevronDown } from 'lucide-react';
+import { Copy, Check, LogOut, Plus, Shield, Calculator, Save, X, Trash2, ChevronDown, Target, Scale } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { createClient } from '@/lib/supabase/client';
+import { TermInfo } from '@/components/term-info';
 import {
   calculateBMR,
   calculateTDEE,
   suggestMacroSplit,
+  calorieTargetForGoal,
+  macroSplitForGoal,
+  calculateIdealWeight,
+  calculateBMI,
+  bmiCategory,
   ACTIVITY_LABELS,
   DIET_LABELS,
   DIET_PREFERENCES,
+  GOAL_LABELS,
 } from '@/lib/nutrition';
 import type { Profile, InviteCode } from '@/lib/types';
-import type { ActivityLevel, Sex } from '@/lib/nutrition';
+import type { ActivityLevel, Sex, Goal } from '@/lib/nutrition';
 
 interface Props {
   profile: Profile;
@@ -118,6 +125,72 @@ export function SettingsClient({ profile, inviteCodes: initialCodes }: Props) {
       setApplyingTDEE(false);
     }
   }
+
+  // ----- Goal -----
+  const [goal, setGoal] = useState<Goal>(profile?.goal ?? 'maintain');
+  const [savingGoal, setSavingGoal] = useState(false);
+  const [applyingGoal, setApplyingGoal] = useState(false);
+
+  const tdeeValue = bioComputed?.tdee ?? profile?.tdee ?? null;
+  const goalTargetCal = tdeeValue ? calorieTargetForGoal(tdeeValue, goal) : null;
+  const goalMacros = goalTargetCal ? macroSplitForGoal(goalTargetCal, goal) : null;
+
+  async function handleSaveGoal(newGoal: Goal) {
+    setGoal(newGoal);
+    setSavingGoal(true);
+    try {
+      const res = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ goal: newGoal }),
+      });
+      if (!res.ok) throw new Error();
+      toast.success('Obiettivo salvato!');
+      router.refresh();
+    } catch {
+      toast.error('Impossibile salvare l\'obiettivo');
+    } finally {
+      setSavingGoal(false);
+    }
+  }
+
+  async function handleApplyGoalToTargets() {
+    if (!goalTargetCal || !goalMacros) return;
+    setApplyingGoal(true);
+    try {
+      const res = await fetch('/api/goals', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          daily_calories: goalTargetCal,
+          daily_protein_g: goalMacros.protein_g,
+          daily_carbs_g: goalMacros.carbs_g,
+          daily_fat_g: goalMacros.fat_g,
+        }),
+      });
+      if (!res.ok) throw new Error();
+      setGoals({
+        daily_calories: goalTargetCal,
+        daily_protein_g: goalMacros.protein_g,
+        daily_carbs_g: goalMacros.carbs_g,
+        daily_fat_g: goalMacros.fat_g,
+      });
+      toast.success('Obiettivi giornalieri aggiornati!');
+      router.refresh();
+    } catch {
+      toast.error('Impossibile applicare gli obiettivi');
+    } finally {
+      setApplyingGoal(false);
+    }
+  }
+
+  // ----- Ideal weight / BMI -----
+  const heightCm = profile?.height_cm ?? (bioHeight ? Number(bioHeight) : null);
+  const weightKg = profile?.weight_kg ?? (bioWeight ? Number(bioWeight) : null);
+  const idealWeight = heightCm ? calculateIdealWeight(heightCm) : null;
+  const bmiValue = weightKg && heightCm ? calculateBMI(weightKg, heightCm) : null;
+  const bmiCat = bmiValue ? bmiCategory(bmiValue) : null;
+  const weightDiff = weightKg && idealWeight ? Math.round((weightKg - idealWeight.target_kg) * 10) / 10 : null;
 
   // ----- Diet preference -----
   const [dietPref, setDietPref] = useState<string>(profile?.diet_preference ?? 'none');
@@ -251,7 +324,10 @@ export function SettingsClient({ profile, inviteCodes: initialCodes }: Props) {
         <h2 className="text-base font-semibold text-foreground mb-4">Obiettivi giornalieri</h2>
         <form onSubmit={handleSaveGoals} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="calories">Calorie (kcal)</Label>
+            <Label htmlFor="calories" className="flex items-center gap-1">
+              Calorie (kcal)
+              <TermInfo term="caloric_need" />
+            </Label>
             <Input
               id="calories"
               type="number"
@@ -263,7 +339,10 @@ export function SettingsClient({ profile, inviteCodes: initialCodes }: Props) {
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="protein" className="text-blue-400">Proteine (g)</Label>
+              <Label htmlFor="protein" className="flex items-center gap-1 text-blue-400">
+                Proteine (g)
+                <TermInfo term="protein" />
+              </Label>
               <Input
                 id="protein"
                 type="number"
@@ -274,7 +353,10 @@ export function SettingsClient({ profile, inviteCodes: initialCodes }: Props) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="carbs" className="text-orange-400">Carb (g)</Label>
+              <Label htmlFor="carbs" className="flex items-center gap-1 text-orange-400">
+                Carb (g)
+                <TermInfo term="carbs" />
+              </Label>
               <Input
                 id="carbs"
                 type="number"
@@ -285,7 +367,10 @@ export function SettingsClient({ profile, inviteCodes: initialCodes }: Props) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="fat" className="text-pink-400">Grassi (g)</Label>
+              <Label htmlFor="fat" className="flex items-center gap-1 text-pink-400">
+                Grassi (g)
+                <TermInfo term="fat" />
+              </Label>
               <Input
                 id="fat"
                 type="number"
@@ -398,11 +483,17 @@ export function SettingsClient({ profile, inviteCodes: initialCodes }: Props) {
           {bioComputed && (
             <div className="rounded-xl border border-border bg-muted/30 p-3">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">BMR:</span>
+                <span className="flex items-center gap-1 text-muted-foreground">
+                  BMR
+                  <TermInfo term="bmr" />
+                </span>
                 <span className="font-semibold text-foreground">{bioComputed.bmr} kcal/giorno</span>
               </div>
               <div className="flex justify-between text-sm mt-1">
-                <span className="text-muted-foreground">TDEE:</span>
+                <span className="flex items-center gap-1 text-muted-foreground">
+                  TDEE
+                  <TermInfo term="tdee" />
+                </span>
                 <span className="font-bold text-primary-500">{bioComputed.tdee} kcal/giorno</span>
               </div>
             </div>
@@ -428,6 +519,130 @@ export function SettingsClient({ profile, inviteCodes: initialCodes }: Props) {
           )}
         </div>
       </motion.div>
+
+      {/* Obiettivo (Goal) */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.18 }}
+        className="rounded-2xl border border-border bg-card p-5"
+      >
+        <div className="flex items-center gap-2 mb-4">
+          <Target className="h-4 w-4 text-primary-500" />
+          <h2 className="text-base font-semibold text-foreground">Obiettivo</h2>
+        </div>
+
+        {/* Goal pill buttons */}
+        <div className="flex gap-2 flex-wrap mb-4">
+          {(Object.entries(GOAL_LABELS) as [Goal, string][]).map(([g, label]) => (
+            <button
+              key={g}
+              type="button"
+              disabled={savingGoal}
+              onClick={() => handleSaveGoal(g)}
+              className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium border transition-colors ${
+                goal === g
+                  ? 'bg-primary-500 text-white border-primary-500'
+                  : 'border-border text-foreground hover:border-primary-500/50'
+              }`}
+            >
+              {label.split(' ')[0]}
+              <TermInfo term={g === 'maintain' ? 'caloric_need' : g} iconSize={12} />
+            </button>
+          ))}
+        </div>
+
+        {/* Preview */}
+        {goalTargetCal && goalMacros ? (
+          <div className="rounded-xl border border-border bg-muted/30 p-3 mb-3">
+            <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
+              Anteprima per {GOAL_LABELS[goal]}
+            </p>
+            <div className="flex justify-between text-sm mb-1">
+              <span className="text-muted-foreground">Calorie target:</span>
+              <span className="font-bold text-primary-500">{goalTargetCal} kcal</span>
+            </div>
+            <div className="flex gap-3 text-xs mt-2">
+              <span className="text-blue-400">P {goalMacros.protein_g}g</span>
+              <span className="text-orange-400">C {goalMacros.carbs_g}g</span>
+              <span className="text-pink-400">G {goalMacros.fat_g}g</span>
+            </div>
+            {!tdeeValue && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Calcola il TDEE nella sezione sopra per vedere i valori.
+              </p>
+            )}
+          </div>
+        ) : (
+          <div className="rounded-xl border border-dashed border-border p-3 mb-3 text-center">
+            <p className="text-xs text-muted-foreground">
+              Calcola il TDEE per vedere l&apos;anteprima dell&apos;obiettivo.
+            </p>
+          </div>
+        )}
+
+        {goalTargetCal && goalMacros && (
+          <Button
+            variant="outline"
+            onClick={handleApplyGoalToTargets}
+            disabled={applyingGoal}
+            className="w-full"
+          >
+            {applyingGoal ? 'Applicazione…' : 'Applica come obiettivi giornalieri'}
+          </Button>
+        )}
+      </motion.div>
+
+      {/* Peso ideale / BMI */}
+      {heightCm && (
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.19 }}
+          className="rounded-2xl border border-border bg-card p-5"
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <Scale className="h-4 w-4 text-primary-500" />
+            <h2 className="text-base font-semibold text-foreground">Peso ideale</h2>
+          </div>
+
+          {idealWeight && (
+            <div className="space-y-3">
+              <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Range sano:</span>
+                  <span className="font-semibold text-foreground">
+                    {idealWeight.min_kg} – {idealWeight.max_kg} kg
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Target ideale:</span>
+                  <span className="font-bold text-primary-500">{idealWeight.target_kg} kg</span>
+                </div>
+                {weightKg && weightDiff !== null && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Differenza attuale:</span>
+                    <span className={`font-semibold ${Math.abs(weightDiff) < 2 ? 'text-green-400' : weightDiff > 0 ? 'text-amber-400' : 'text-sky-400'}`}>
+                      {weightDiff > 0 ? '+' : ''}{weightDiff} kg
+                    </span>
+                  </div>
+                )}
+                {bmiValue && bmiCat && (
+                  <div className="flex justify-between text-sm pt-1 border-t border-border">
+                    <span className="flex items-center gap-1 text-muted-foreground">
+                      BMI
+                      <TermInfo term="bmi" />
+                    </span>
+                    <span className="font-bold" style={{ color: bmiCat.color }}>
+                      {bmiValue} — {bmiCat.label}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </motion.div>
+      )}
 
       {/* Diet preference */}
       <motion.div

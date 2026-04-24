@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { UtensilsCrossed, PieChart, CalendarDays } from 'lucide-react';
+import { UtensilsCrossed, PieChart, CalendarDays, Dumbbell } from 'lucide-react';
 import { ProgressRing } from '@/components/progress-ring';
 import { MacroBar } from '@/components/macro-bar';
 import { MealCard } from '@/components/meal-card';
@@ -126,21 +126,28 @@ export function DashboardClient({ profile, meals: initialMeals }: Props) {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.25 }}
-        className="flex gap-3"
+        className="grid grid-cols-3 gap-2"
       >
         <Link
           href="/insights"
-          className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 text-sm font-medium text-foreground hover:bg-muted/40 transition-colors"
+          className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-2 py-3 text-xs font-medium text-foreground hover:bg-muted/40 transition-colors"
         >
-          <PieChart className="h-4 w-4 text-primary-500" />
+          <PieChart className="h-5 w-5 text-primary-500" />
           Insights
         </Link>
         <Link
           href="/plan"
-          className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 text-sm font-medium text-foreground hover:bg-muted/40 transition-colors"
+          className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-2 py-3 text-xs font-medium text-foreground hover:bg-muted/40 transition-colors"
         >
-          <CalendarDays className="h-4 w-4 text-primary-500" />
+          <CalendarDays className="h-5 w-5 text-primary-500" />
           Piano pasti
+        </Link>
+        <Link
+          href="/workout"
+          className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-2 py-3 text-xs font-medium text-foreground hover:bg-muted/40 transition-colors"
+        >
+          <Dumbbell className="h-5 w-5 text-primary-500" />
+          Workout
         </Link>
       </motion.div>
 

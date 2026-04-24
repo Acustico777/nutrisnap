@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 
 import { createClient } from '@/lib/supabase/server';
 import { openai, MEAL_PLAN_PROMPT } from '@/lib/openai';
+import { GLUTEN_FOODS } from '@/lib/nutrition';
 import type { MealPlan } from '@/lib/types';
 
 interface MealPlanData {
@@ -49,7 +50,11 @@ export async function POST(req: NextRequest) {
 
     const diet_preference = body.diet_preference ?? (profile?.diet_preference as string | null) ?? 'none';
     const target_calories = body.target_calories ?? (profile?.tdee as number | null) ?? 2000;
-    const excluded_foods: string[] = (profile?.excluded_foods as string[] | null) ?? [];
+    const profileExcluded: string[] = (profile?.excluded_foods as string[] | null) ?? [];
+    // Automatically add gluten foods for celiac users
+    const excluded_foods: string[] = diet_preference === 'celiac'
+      ? Array.from(new Set([...profileExcluded, ...GLUTEN_FOODS]))
+      : profileExcluded;
 
     const userMessage = JSON.stringify({
       plan_type,

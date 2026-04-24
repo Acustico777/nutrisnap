@@ -43,6 +43,9 @@ export async function PUT(req: NextRequest) {
       activity_level?: ActivityLevel;
       diet_preference?: string;
       excluded_foods?: string[];
+      goal?: 'cut' | 'lean_bulk' | 'maintain';
+      days_per_week?: number;
+      workout_location?: 'gym' | 'home';
     };
 
     // Build update payload with only provided fields
@@ -55,6 +58,9 @@ export async function PUT(req: NextRequest) {
     if (body.activity_level !== undefined) updates.activity_level = body.activity_level;
     if (body.diet_preference !== undefined) updates.diet_preference = body.diet_preference;
     if (body.excluded_foods !== undefined) updates.excluded_foods = body.excluded_foods;
+    if (body.goal !== undefined) updates.goal = body.goal;
+    if (body.days_per_week !== undefined) updates.days_per_week = body.days_per_week;
+    if (body.workout_location !== undefined) updates.workout_location = body.workout_location;
 
     // If body has BMR-relevant fields, fetch current profile to fill gaps
     const hasBodyMetrics =

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Camera, PieChart, CalendarDays, Settings } from 'lucide-react';
+import { Home, Camera, PieChart, Dumbbell, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function BottomNav() {
@@ -65,18 +65,18 @@ export function BottomNav() {
           </span>
         </Link>
 
-        {/* Plan */}
+        {/* Workout */}
         <Link
-          href="/plan"
+          href="/workout"
           className={cn(
             'flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors',
-            pathname === '/plan'
+            pathname?.startsWith('/workout')
               ? 'text-primary-500'
               : 'text-muted-foreground hover:text-foreground'
           )}
         >
-          <CalendarDays className="h-5 w-5" />
-          <span className="text-[10px] font-medium">Piano</span>
+          <Dumbbell className="h-5 w-5" />
+          <span className="text-[10px] font-medium">Workout</span>
         </Link>
 
         {/* Settings */}

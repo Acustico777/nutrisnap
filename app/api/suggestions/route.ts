@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 
 import { createClient } from '@/lib/supabase/server';
 import { CATEGORIES } from '@/lib/categories';
+import { GLUTEN_FOODS } from '@/lib/nutrition';
 import type { FoodSuggestion } from '@/lib/types';
 
 type RangeParam = 'day' | 'week' | 'month';
@@ -55,14 +56,19 @@ export async function GET(req: NextRequest) {
 
     const { from, to } = getDateRange(range);
 
-    // Get profile for excluded_foods
+    // Get profile for excluded_foods and diet_preference
     const { data: profile } = await supabase
       .from('profiles')
-      .select('excluded_foods')
+      .select('excluded_foods, diet_preference')
       .eq('id', user.id)
       .single();
 
-    const excludedFoods: string[] = (profile?.excluded_foods as string[] | null) ?? [];
+    const profileExcluded: string[] = (profile?.excluded_foods as string[] | null) ?? [];
+    const dietPref: string = (profile?.diet_preference as string | null) ?? 'none';
+    // Automatically merge gluten foods for celiac users
+    const excludedFoods: string[] = dietPref === 'celiac'
+      ? Array.from(new Set([...profileExcluded, ...GLUTEN_FOODS]))
+      : profileExcluded;
 
     const { data: meals, error } = await supabase
       .from('meals')

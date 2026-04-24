@@ -17,6 +17,49 @@ export interface Profile {
   excluded_foods: string[];
   bmr: number | null;
   tdee: number | null;
+  goal: 'cut' | 'lean_bulk' | 'maintain';
+  days_per_week: number | null;
+  workout_location: 'gym' | 'home' | null;
+}
+
+export interface Exercise {
+  id: string;
+  name_it: string;
+  muscle_group: 'chest' | 'back' | 'shoulders' | 'biceps' | 'triceps' | 'forearms' | 'abs' | 'quadriceps' | 'hamstrings' | 'glutes' | 'calves' | 'traps' | 'full_body';
+  secondary_muscles: string[];
+  equipment: 'gym' | 'bodyweight';
+  description_it: string;
+  gif_url: string | null;
+  default_sets: number;
+  default_reps: string;
+  default_rest_sec: number;
+}
+
+export interface WorkoutExerciseEntry {
+  exercise_id: string;
+  exercise_name: string;
+  muscle_group: string;
+  sets: number;
+  reps: string;
+  rest_sec: number;
+  notes?: string;
+}
+
+export interface WorkoutDay {
+  day_label: string;
+  muscle_focus: string[];
+  exercises: WorkoutExerciseEntry[];
+}
+
+export interface WorkoutPlan {
+  id: string;
+  user_id: string;
+  name: string | null;
+  goal: 'cut' | 'lean_bulk' | 'maintain' | null;
+  days_per_week: number | null;
+  location: 'gym' | 'home' | null;
+  plan_data: { days: WorkoutDay[] };
+  created_at: string;
 }
 
 export interface Meal {
