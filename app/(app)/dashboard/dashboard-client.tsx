@@ -144,7 +144,7 @@ export function DashboardClient({ profile, meals: initialMeals, waterLogs: initi
   };
 
   return (
-    <div className="mx-auto max-w-md px-4 pt-8 space-y-6">
+    <div className="mx-auto max-w-md md:max-w-3xl px-4 pt-8 space-y-6">
       {/* Greeting */}
       <motion.div
         initial={{ opacity: 0, y: -12 }}

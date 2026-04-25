@@ -150,7 +150,7 @@ export function WeeklyClient({ profile }: Props) {
   const prevTotals = report?.previous;
 
   return (
-    <div className="mx-auto max-w-md px-4 pt-8 pb-24 space-y-5">
+    <div className="mx-auto max-w-md md:max-w-3xl px-4 pt-8 pb-24 space-y-5">
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3">
         <Link href="/insights" className="p-1.5 rounded-lg hover:bg-muted/50 transition-colors">

@@ -69,7 +69,7 @@ export function HistoryClient({ sessions }: Props) {
 
   if (sessions.length === 0) {
     return (
-      <div className="mx-auto max-w-md px-4 pt-8 pb-8 space-y-6">
+      <div className="mx-auto max-w-md md:max-w-3xl px-4 pt-8 pb-8 space-y-6">
         <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}>
           <div className="flex items-center gap-2">
             <History className="h-6 w-6 text-primary-500" />
@@ -91,7 +91,7 @@ export function HistoryClient({ sessions }: Props) {
   }
 
   return (
-    <div className="mx-auto max-w-md px-4 pt-8 pb-8 space-y-6">
+    <div className="mx-auto max-w-md md:max-w-3xl px-4 pt-8 pb-8 space-y-6">
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}>
         <div className="flex items-center gap-2">

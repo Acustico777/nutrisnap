@@ -309,7 +309,7 @@ export function SettingsClient({ profile, inviteCodes: initialCodes }: Props) {
   const unusedCodes = codes.filter((c) => !c.used_by);
 
   return (
-    <div className="mx-auto max-w-md px-4 pt-8 pb-8 space-y-6">
+    <div className="mx-auto max-w-md md:max-w-3xl px-4 pt-8 pb-8 space-y-6">
       <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="text-2xl font-bold text-foreground">Impostazioni</h1>
         <p className="text-sm text-muted-foreground">{profile?.email}</p>

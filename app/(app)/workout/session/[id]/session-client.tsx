@@ -153,7 +153,7 @@ export function SessionClient({ session: initialSession, profile: _profile }: Pr
     : null;
 
   return (
-    <div className="mx-auto max-w-md px-4 pt-6 pb-32 space-y-5">
+    <div className="mx-auto max-w-md md:max-w-3xl px-4 pt-6 pb-32 space-y-5">
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
         <button

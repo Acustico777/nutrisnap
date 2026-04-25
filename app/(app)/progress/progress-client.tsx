@@ -230,7 +230,7 @@ export function ProgressClient({ profile, initialLogs }: Props) {
   const recentLogs = sortedDesc.slice(0, 10);
 
   return (
-    <div className="mx-auto max-w-md px-4 pt-8 space-y-6 pb-32">
+    <div className="mx-auto max-w-md md:max-w-3xl px-4 pt-8 space-y-6 pb-32">
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
         <div className="flex items-center gap-2">

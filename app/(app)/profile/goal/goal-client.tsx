@@ -141,7 +141,7 @@ export function GoalClient({ profile }: Props) {
   }
 
   return (
-    <div className="mx-auto max-w-md px-4 pt-8 pb-24 space-y-5">
+    <div className="mx-auto max-w-md md:max-w-3xl px-4 pt-8 pb-24 space-y-5">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -12 }}

@@ -168,7 +168,7 @@ export function BuilderClient({ exercises }: Props) {
   ];
 
   return (
-    <div className="mx-auto max-w-md px-4 pt-8 pb-32 space-y-6">
+    <div className="mx-auto max-w-md md:max-w-3xl px-4 pt-8 pb-32 space-y-6">
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}>
         <div className="flex items-center gap-2">

@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { BottomNav } from '@/components/bottom-nav';
+import { TopNav } from '@/components/top-nav';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
@@ -26,7 +27,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <main className="flex-1 pb-24">{children}</main>
+      <TopNav pathPreference={(profile?.path_preference ?? null) as 'nutrition' | 'workout' | 'both' | null} />
+      <main className="flex-1 pb-24 md:pb-8">{children}</main>
       <BottomNav pathPreference={(profile?.path_preference ?? null) as 'nutrition' | 'workout' | 'both' | null} />
     </div>
   );

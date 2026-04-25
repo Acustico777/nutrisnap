@@ -141,7 +141,7 @@ export function InsightsClient() {
   const activePieData = (data?.breakdown ?? []).filter((b) => b.calories > 0);
 
   return (
-    <div className="mx-auto max-w-md px-4 pt-8 space-y-6 pb-8">
+    <div className="mx-auto max-w-md md:max-w-3xl px-4 pt-8 space-y-6 pb-8">
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="text-2xl font-bold text-foreground">Insights</h1>
