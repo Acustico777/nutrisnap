@@ -26,7 +26,14 @@ export default function ScanPage() {
   const [items, setItems] = useState<AnalyzedFoodItem[]>([]);
   const [confidence, setConfidence] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
-  const [mealType, setMealType] = useState<MealType>('lunch');
+  const [mealType, setMealType] = useState<MealType>(() => {
+    const h = new Date().getHours() + new Date().getMinutes() / 60;
+    if (h >= 6 && h < 10.5) return 'breakfast';
+    if (h >= 10.5 && h < 15) return 'lunch';
+    if (h >= 15 && h < 18) return 'snack';
+    if (h >= 18 && h < 22) return 'dinner';
+    return 'snack';
+  });
 
   async function handleCapture(file: File) {
     setCapturedFile(file);
@@ -108,7 +115,7 @@ export default function ScanPage() {
     }
   }
 
-  const totalCalories = items.reduce((s, i) => s + i.calories * i.quantity, 0);
+  const totalCalories = items.reduce((s, i) => s + i.calories, 0);
 
   return (
     <div className="mx-auto max-w-md px-4 pt-8 space-y-5">
@@ -126,6 +133,22 @@ export default function ScanPage() {
             exit={{ opacity: 0 }}
             className="space-y-3"
           >
+            {/* Meal type selector BEFORE capture */}
+            <div className="relative">
+              <label className="text-xs text-muted-foreground mb-1 block">Tipo pasto</label>
+              <select
+                value={mealType}
+                onChange={(e) => setMealType(e.target.value as MealType)}
+                className="w-full appearance-none rounded-xl border border-input bg-background px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                {MEAL_TYPES.map((t) => (
+                  <option key={t} value={t}>
+                    {getMealTypeLabel(t)}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-3 top-[60%] h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            </div>
             <PhotoCapture onCapture={handleCapture} />
             <p className="text-center text-sm text-muted-foreground">
               Preferisci inserire manualmente?{' '}
@@ -212,9 +235,9 @@ export default function ScanPage() {
               <p className="text-sm font-semibold text-foreground mb-1">Totale pasto</p>
               <div className="flex gap-4 text-sm">
                 <span className="font-bold text-primary-500">{Math.round(totalCalories)} kcal</span>
-                <span className="text-blue-400">P {Math.round(items.reduce((s, i) => s + i.protein_g * i.quantity, 0))}g</span>
-                <span className="text-orange-400">C {Math.round(items.reduce((s, i) => s + i.carbs_g * i.quantity, 0))}g</span>
-                <span className="text-pink-400">G {Math.round(items.reduce((s, i) => s + i.fat_g * i.quantity, 0))}g</span>
+                <span className="text-blue-400">P {Math.round(items.reduce((s, i) => s + i.protein_g, 0))}g</span>
+                <span className="text-orange-400">C {Math.round(items.reduce((s, i) => s + i.carbs_g, 0))}g</span>
+                <span className="text-pink-400">G {Math.round(items.reduce((s, i) => s + i.fat_g, 0))}g</span>
               </div>
             </div>
 

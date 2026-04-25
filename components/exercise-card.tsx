@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { Star } from 'lucide-react';
 import type { Exercise } from '@/lib/types';
 
 const MUSCLE_LABELS: Record<string, string> = {
@@ -25,12 +26,26 @@ const EQUIPMENT_LABELS: Record<string, string> = {
 
 interface Props {
   exercise: Exercise;
+  isFavorite?: boolean;
+  onToggleFavorite?: (exerciseId: string) => void;
 }
 
-export function ExerciseCard({ exercise }: Props) {
+export function ExerciseCard({ exercise, isFavorite, onToggleFavorite }: Props) {
   const [imgSrc, setImgSrc] = useState<string>(
     exercise.gif_url ?? '/exercises/placeholder.svg'
   );
+  const [localFavorite, setLocalFavorite] = useState<boolean>(isFavorite ?? false);
+
+  // Keep in sync if parent prop changes
+  const showStar = onToggleFavorite !== undefined;
+  const starred = showStar ? (isFavorite ?? localFavorite) : false;
+
+  function handleStarClick(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (!onToggleFavorite) return;
+    setLocalFavorite((prev) => !prev);
+    onToggleFavorite(exercise.id);
+  }
 
   return (
     <div className="rounded-2xl border border-border bg-card overflow-hidden flex flex-col">
@@ -43,6 +58,20 @@ export function ExerciseCard({ exercise }: Props) {
           onError={() => setImgSrc('/exercises/placeholder.svg')}
           className="w-full h-full object-cover"
         />
+        {showStar && (
+          <button
+            type="button"
+            onClick={handleStarClick}
+            aria-label={starred ? 'Rimuovi dai preferiti' : 'Aggiungi ai preferiti'}
+            className="absolute top-2 right-2 flex items-center justify-center h-7 w-7 rounded-full bg-card/80 backdrop-blur-sm border border-border shadow-sm hover:bg-card transition-colors"
+          >
+            <Star
+              className={`h-4 w-4 transition-colors ${
+                starred ? 'text-primary-500 fill-current' : 'text-muted-foreground'
+              }`}
+            />
+          </button>
+        )}
       </div>
 
       {/* Content */}

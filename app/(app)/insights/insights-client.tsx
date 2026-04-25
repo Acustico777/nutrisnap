@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Loader2, Lightbulb } from 'lucide-react';
+import { Loader2, Lightbulb, Lock, Check, BarChart2 } from 'lucide-react';
 import {
   PieChart,
   Pie,
@@ -14,18 +15,55 @@ import {
   XAxis,
   YAxis,
   ResponsiveContainer,
+  LineChart,
+  Line,
 } from 'recharts';
 import { CATEGORY_COLORS } from '@/lib/categories';
 import { CATEGORIES } from '@/lib/categories';
+import { MACRO_COLORS } from '@/lib/constants';
 import type { CategoryBreakdown, FoodSuggestion } from '@/lib/types';
+import { StreakBadge } from '@/components/streak-badge';
 
 type Range = 'day' | 'week' | 'month';
+
+interface BadgeData {
+  id: string;
+  label: string;
+  description: string;
+  unlocked: boolean;
+}
+
+interface StreakData {
+  current_streak: number;
+  longest_streak: number;
+  last_log_date: string | null;
+  badges: BadgeData[];
+}
+
+const BADGE_ICONS: Record<string, string> = {
+  first_flame: '🔥',
+  full_week: '🌟',
+  two_weeks: '💎',
+  champion_month: '🏆',
+  '100_days': '🥇',
+  first_meal: '🍽️',
+  ten_meals: '🍱',
+  hundred_meals: '🍴',
+  first_workout: '💪',
+  ten_workouts: '🏋️',
+  first_weight: '⚖️',
+  weight_tracker: '📈',
+  hydrated: '💧',
+};
 
 interface SeriesEntry {
   date: string;
   label: string;
   categories: Record<string, number>;
   total: number;
+  protein_g?: number;
+  carbs_g?: number;
+  fat_g?: number;
 }
 
 interface InsightsData {
@@ -56,6 +94,7 @@ export function InsightsClient() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<InsightsData | null>(null);
   const [suggestions, setSuggestions] = useState<FoodSuggestion[]>([]);
+  const [streak, setStreak] = useState<StreakData | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -63,17 +102,20 @@ export function InsightsClient() {
 
     async function load() {
       try {
-        const [insRes, sugRes] = await Promise.all([
+        const [insRes, sugRes, streakRes] = await Promise.all([
           fetch(`/api/insights?range=${range}`),
           fetch('/api/suggestions?range=week'),
+          fetch('/api/streak'),
         ]);
-        const [insData, sugData] = await Promise.all([
+        const [insData, sugData, streakData] = await Promise.all([
           insRes.json() as Promise<InsightsData & { error?: string }>,
           sugRes.json() as Promise<{ suggestions: FoodSuggestion[]; error?: string }>,
+          streakRes.json() as Promise<StreakData & { error?: string }>,
         ]);
         if (!cancelled) {
           if (insRes.ok && !insData.error) setData(insData);
           if (sugRes.ok && !sugData.error) setSuggestions(sugData.suggestions ?? []);
+          if (streakRes.ok && !streakData.error) setStreak(streakData);
         }
       } catch {
         // silently ignore
@@ -105,6 +147,27 @@ export function InsightsClient() {
         <h1 className="text-2xl font-bold text-foreground">Insights</h1>
         <p className="text-sm text-muted-foreground">Analisi nutrizionale</p>
       </motion.div>
+
+      {/* Weekly report link */}
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+        <Link
+          href="/insights/weekly"
+          className="flex items-center justify-between rounded-2xl border border-primary-500/30 bg-primary-500/10 px-4 py-3 hover:bg-primary-500/20 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <BarChart2 className="h-5 w-5 text-primary-500" />
+            <span className="text-sm font-semibold text-foreground">Report settimanale</span>
+          </div>
+          <span className="text-xs text-primary-500 font-medium">Vedi →</span>
+        </Link>
+      </motion.div>
+
+      {/* Streak */}
+      {streak !== null && (
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+          <StreakBadge current={streak.current_streak} longest={streak.longest_streak} />
+        </motion.div>
+      )}
 
       {/* Range toggle */}
       <div className="flex rounded-xl border border-border p-1 w-fit gap-1">
@@ -257,6 +320,73 @@ export function InsightsClient() {
             </motion.div>
           )}
 
+          {/* Trend macronutrienti */}
+          {flatSeries.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
+              className="rounded-2xl border border-border bg-card p-4"
+            >
+              <h2 className="text-sm font-semibold text-foreground mb-4">Trend macronutrienti</h2>
+              <ResponsiveContainer width="100%" height={180}>
+                <LineChart
+                  data={(data?.series ?? []).map((s) => ({
+                    label: s.label,
+                    protein_g: s.protein_g ?? 0,
+                    carbs_g: s.carbs_g ?? 0,
+                    fat_g: s.fat_g ?? 0,
+                  }))}
+                  margin={{ top: 4, right: 4, left: -24, bottom: 0 }}
+                >
+                  <XAxis
+                    dataKey="label"
+                    tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                    tickLine={false}
+                    axisLine={false}
+                    interval={range === 'month' ? 4 : 0}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(v: number) => `${v}g`}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '12px',
+                      fontSize: 12,
+                      color: 'hsl(var(--foreground))',
+                    }}
+                    formatter={(value: number, name: string) => {
+                      const labels: Record<string, string> = {
+                        protein_g: 'Proteine',
+                        carbs_g: 'Carboidrati',
+                        fat_g: 'Grassi',
+                      };
+                      return [`${value}g`, labels[name] ?? name];
+                    }}
+                  />
+                  <Legend
+                    formatter={(value: string) => {
+                      const labels: Record<string, string> = {
+                        protein_g: 'Proteine',
+                        carbs_g: 'Carboidrati',
+                        fat_g: 'Grassi',
+                      };
+                      return <span style={{ fontSize: 10, color: 'hsl(var(--foreground))' }}>{labels[value] ?? value}</span>;
+                    }}
+                  />
+                  <Line type="monotone" dataKey="protein_g" stroke={MACRO_COLORS.protein} strokeWidth={2} dot={false} name="protein_g" connectNulls />
+                  <Line type="monotone" dataKey="carbs_g" stroke={MACRO_COLORS.carbs} strokeWidth={2} dot={false} name="carbs_g" connectNulls />
+                  <Line type="monotone" dataKey="fat_g" stroke={MACRO_COLORS.fat} strokeWidth={2} dot={false} name="fat_g" connectNulls />
+                </LineChart>
+              </ResponsiveContainer>
+            </motion.div>
+          )}
+
           {/* Smart suggestions */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -311,6 +441,43 @@ export function InsightsClient() {
               </div>
             )}
           </motion.div>
+
+          {/* Badges */}
+          {streak && streak.badges.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35 }}
+              className="rounded-2xl border border-border bg-card p-4"
+            >
+              <h2 className="text-sm font-semibold text-foreground mb-3">I tuoi traguardi</h2>
+              <div className="grid grid-cols-3 gap-2">
+                {streak.badges.map((badge) => (
+                  <div
+                    key={badge.id}
+                    className={`relative flex flex-col items-center gap-1 rounded-xl border p-2 text-center transition-colors ${
+                      badge.unlocked
+                        ? 'border-primary-500/40 bg-primary-500/10'
+                        : 'border-border bg-muted/10 opacity-30'
+                    }`}
+                  >
+                    <span className="text-2xl">{BADGE_ICONS[badge.id] ?? '🏅'}</span>
+                    <p className="text-[10px] font-semibold text-foreground leading-tight">{badge.label}</p>
+                    {badge.unlocked && (
+                      <span className="absolute top-1 right-1">
+                        <Check className="h-3 w-3 text-primary-500" />
+                      </span>
+                    )}
+                    {!badge.unlocked && (
+                      <span className="absolute top-1 right-1">
+                        <Lock className="h-3 w-3 text-muted-foreground" />
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
         </>
       )}
     </div>

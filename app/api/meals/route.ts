@@ -86,13 +86,19 @@ export async function POST(req: NextRequest) {
     }
 
     // Calculate totals
+    // When unit is 'g'/'grams', macros are already per-portion (no need to multiply by quantity)
+    // For legacy 'porzione' units, multiply as before
+    const isGramUnit = (u: string) => u === 'g' || u === 'grams' || u === 'gr' || u === 'grammi';
     const totals = items.reduce(
-      (acc, item) => ({
-        calories: acc.calories + item.calories * item.quantity,
-        protein_g: acc.protein_g + item.protein_g * item.quantity,
-        carbs_g: acc.carbs_g + item.carbs_g * item.quantity,
-        fat_g: acc.fat_g + item.fat_g * item.quantity,
-      }),
+      (acc, item) => {
+        const mult = isGramUnit(item.unit) ? 1 : item.quantity;
+        return {
+          calories: acc.calories + item.calories * mult,
+          protein_g: acc.protein_g + item.protein_g * mult,
+          carbs_g: acc.carbs_g + item.carbs_g * mult,
+          fat_g: acc.fat_g + item.fat_g * mult,
+        };
+      },
       { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 }
     );
 

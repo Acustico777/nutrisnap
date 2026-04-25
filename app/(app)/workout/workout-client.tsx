@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { Dumbbell, BookOpen, ClipboardList, Loader2, AlertCircle } from 'lucide-react';
+import { Dumbbell, BookOpen, ClipboardList, Loader2, AlertCircle, Wrench, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GOAL_LABELS } from '@/lib/nutrition';
 import type { Profile, WorkoutPlan } from '@/lib/types';
@@ -94,25 +94,39 @@ export function WorkoutClient({ profile }: Props) {
       >
         <Link
           href="/workout/library"
-          className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 py-3 text-sm font-medium text-foreground hover:bg-muted/40 transition-colors"
+          className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-3 py-4 text-sm font-medium text-foreground hover:bg-muted/40 transition-colors"
         >
-          <BookOpen className="h-4 w-4 text-primary-500" />
+          <BookOpen className="h-5 w-5 text-primary-500" />
           Libreria esercizi
         </Link>
         {latestPlan ? (
           <Link
             href="/workout/plan"
-            className="flex items-center justify-center gap-2 rounded-xl border border-primary-500/40 bg-primary-500/10 px-3 py-3 text-sm font-medium text-primary-500 hover:bg-primary-500/20 transition-colors"
+            className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-primary-500/40 bg-primary-500/10 px-3 py-4 text-sm font-medium text-primary-500 hover:bg-primary-500/20 transition-colors"
           >
-            <ClipboardList className="h-4 w-4" />
+            <ClipboardList className="h-5 w-5" />
             Vedi piano
           </Link>
         ) : (
-          <div className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-border px-3 py-3 text-sm text-muted-foreground">
-            <ClipboardList className="h-4 w-4" />
+          <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-border px-3 py-4 text-sm text-muted-foreground cursor-not-allowed opacity-60">
+            <ClipboardList className="h-5 w-5" />
             Nessun piano
           </div>
         )}
+        <Link
+          href="/workout/builder"
+          className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-3 py-4 text-sm font-medium text-foreground hover:bg-muted/40 transition-colors"
+        >
+          <Wrench className="h-5 w-5 text-primary-500" />
+          Crea piano custom
+        </Link>
+        <Link
+          href="/workout/history"
+          className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-3 py-4 text-sm font-medium text-foreground hover:bg-muted/40 transition-colors"
+        >
+          <History className="h-5 w-5 text-primary-500" />
+          Storico allenamenti
+        </Link>
       </motion.div>
 
       {/* Profile summary */}

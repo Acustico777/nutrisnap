@@ -16,12 +16,17 @@ export const NUTRITION_SYSTEM_PROMPT = `You are a nutrition expert. Analyze the 
       "protein_g": number,
       "carbs_g": number,
       "fat_g": number,
-      "category": "vegetables" | "meat" | "fish" | "fruit" | "other"
+      "category": "vegetables" | "meat" | "fish" | "fruit" | "other",
+      "fiber_g": number | null,
+      "sugar_g": number | null,
+      "sodium_mg": number | null
     }
   ],
   "confidence": "high" | "medium" | "low",
   "notes": "short description of what you see"
-}`;
+}
+
+For fiber_g, sugar_g, and sodium_mg: include them when you can reasonably estimate them. Omit (or set null) if uncertain.`;
 
 export const FOOD_ESTIMATION_PROMPT = `You are a nutrition database. Given a food name and weight in grams, return accurate nutritional values. Be conservative. Return ONLY valid JSON with no additional text, matching this exact schema:
 
@@ -32,10 +37,15 @@ export const FOOD_ESTIMATION_PROMPT = `You are a nutrition database. Given a foo
   "protein_g": number,
   "carbs_g": number,
   "fat_g": number,
-  "category": "vegetables" | "meat" | "fish" | "fruit" | "other"
-}`;
+  "category": "vegetables" | "meat" | "fish" | "fruit" | "other",
+  "fiber_g": number | null,
+  "sugar_g": number | null,
+  "sodium_mg": number | null
+}
 
-export const MEAL_PLAN_PROMPT = `You are a professional nutritionist and meal planner. Generate a complete meal plan based on the user's inputs. All meal names, descriptions, and ingredient names must be in Italian. Return ONLY valid JSON with no additional text, matching this exact schema:
+For fiber_g, sugar_g, and sodium_mg: include when you can reasonably estimate them. Omit (or set null) if uncertain.`;
+
+export const MEAL_PLAN_PROMPT = `You are a professional nutritionist and meal planner. Generate a complete meal plan based on the user's inputs. All meal names, descriptions, ingredient names, and preparation steps must be in Italian. Return ONLY valid JSON with no additional text, matching this exact schema:
 
 {
   "days": [
@@ -50,7 +60,8 @@ export const MEAL_PLAN_PROMPT = `You are a professional nutritionist and meal pl
           "protein_g": number,
           "carbs_g": number,
           "fat_g": number,
-          "ingredients": ["string (Italian ingredient name)", ...]
+          "ingredients": ["string (Italian ingredient name)", ...],
+          "steps": ["string (passo 1 di preparazione in italiano)", ...]
         }
       ]
     }
@@ -63,4 +74,5 @@ Rules:
 - Respect the diet_preference (vegetarian, vegan, keto, mediterranean, paleo, low_carb, or none).
 - STRICTLY avoid any foods listed in excluded_foods.
 - Distribute calories across meals roughly as: breakfast 25%, lunch 35%, dinner 30%, snack 10%.
+- For each meal include 3-6 concise preparation steps in the "steps" array (in Italian).
 - All text must be in Italian.`;

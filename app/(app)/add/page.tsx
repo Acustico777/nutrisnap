@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { Loader2, ArrowLeft, Sparkles, Save, ChevronDown } from 'lucide-react';
+import { Loader2, ArrowLeft, Sparkles, Save, ChevronDown, Barcode, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,8 +34,53 @@ export default function AddPage() {
   const [estimating, setEstimating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [estimate, setEstimate] = useState<EstimateResult | null>(null);
+  const [barcodeInput, setBarcodeInput] = useState('');
+  const [scanningBarcode, setScanningBarcode] = useState(false);
 
   const canEstimate = name.trim().length > 0 && grams >= 1;
+
+  async function handleBarcodeSearch() {
+    const cleaned = barcodeInput.trim().replace(/\D/g, '');
+    if (!/^\d{8,13}$/.test(cleaned)) {
+      toast.error('Inserisci un codice a barre valido (8-13 cifre)');
+      return;
+    }
+    setScanningBarcode(true);
+    try {
+      const res = await fetch(`/api/barcode?barcode=${cleaned}`);
+      const data = await res.json() as {
+        name?: string;
+        brand?: string | null;
+        calories_100g?: number;
+        protein_100g?: number;
+        carbs_100g?: number;
+        fat_100g?: number;
+        error?: string;
+      };
+      if (!res.ok || data.error) throw new Error(data.error ?? 'Prodotto non trovato');
+      const fullName = data.brand ? `${data.name} (${data.brand})` : (data.name ?? '');
+      setName(fullName);
+      // Pre-fill calories based on current grams
+      if (data.calories_100g != null) {
+        const factor = grams / 100;
+        setCalories(String(Math.round((data.calories_100g ?? 0) * factor)));
+        setEstimate({
+          name: fullName,
+          grams,
+          calories: Math.round((data.calories_100g ?? 0) * factor),
+          protein_g: Math.round((data.protein_100g ?? 0) * factor * 10) / 10,
+          carbs_g: Math.round((data.carbs_100g ?? 0) * factor * 10) / 10,
+          fat_g: Math.round((data.fat_100g ?? 0) * factor * 10) / 10,
+          category: 'other',
+        });
+      }
+      toast.success('Prodotto trovato!');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Prodotto non trovato');
+    } finally {
+      setScanningBarcode(false);
+    }
+  }
 
   async function handleEstimate() {
     if (!canEstimate) return;
@@ -182,6 +227,40 @@ export default function AddPage() {
             rows={2}
             className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
           />
+        </div>
+
+        {/* Barcode section */}
+        <div className="space-y-2 rounded-xl border border-border bg-muted/20 p-3">
+          <div className="flex items-center gap-2">
+            <Barcode className="h-4 w-4 text-muted-foreground" />
+            <p className="text-xs font-medium text-muted-foreground">Codice a barre</p>
+          </div>
+          <p className="text-xs text-muted-foreground/70">
+            Inserisci manualmente il codice a barre (8-13 cifre) per cercare il prodotto.
+          </p>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              placeholder="es. 8001505005505"
+              value={barcodeInput}
+              onChange={(e) => setBarcodeInput(e.target.value)}
+              className="flex-1 rounded-xl border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleBarcodeSearch}
+              disabled={scanningBarcode || !barcodeInput.trim()}
+            >
+              {scanningBarcode ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Search className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
         </div>
 
         {/* Estimate button */}

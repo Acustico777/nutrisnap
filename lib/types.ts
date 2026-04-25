@@ -20,6 +20,14 @@ export interface Profile {
   goal: 'cut' | 'lean_bulk' | 'maintain';
   days_per_week: number | null;
   workout_location: 'gym' | 'home' | null;
+  // v4 fields
+  lean_mass_kg: number | null;
+  fat_mass_kg: number | null;
+  body_fat_percent: number | null;
+  onboarding_completed: boolean;
+  path_preference: 'nutrition' | 'workout' | 'both' | null;
+  target_weight_kg: number | null;
+  goal_target_date: string | null;
 }
 
 export interface Exercise {
@@ -88,6 +96,10 @@ export interface MealItem {
   carbs_g: number;
   fat_g: number;
   category?: 'vegetables' | 'meat' | 'fish' | 'fruit' | 'other';
+  // v4 micronutrients (optional)
+  fiber_g?: number;
+  sugar_g?: number;
+  sodium_mg?: number;
 }
 
 export interface InviteCode {
@@ -108,6 +120,10 @@ export interface AnalyzedFoodItem {
   carbs_g: number;
   fat_g: number;
   category?: 'vegetables' | 'meat' | 'fish' | 'fruit' | 'other';
+  // v4 micronutrients (optional)
+  fiber_g?: number;
+  sugar_g?: number;
+  sodium_mg?: number;
 }
 
 export interface AnalyzeResponse {
@@ -139,6 +155,7 @@ export interface MealPlanMeal {
   carbs_g: number;
   fat_g: number;
   ingredients: string[];
+  steps?: string[]; // v4: istruzioni di preparazione (3-6 passi)
 }
 
 export interface MealPlanDay {
@@ -168,4 +185,77 @@ export interface FoodSuggestion {
   category: 'vegetables' | 'meat' | 'fish' | 'fruit' | 'other';
   reason: string;
   examples: string[];
+}
+
+// ─── v4 new types ─────────────────────────────────────────────────────────────
+
+export interface WeightLog {
+  id: string;
+  user_id: string;
+  weight_kg: number;
+  lean_mass_kg: number | null;
+  fat_mass_kg: number | null;
+  body_fat_percent: number | null;
+  notes: string | null;
+  logged_at: string;
+  created_at: string;
+}
+
+export interface WorkoutSession {
+  id: string;
+  user_id: string;
+  plan_id: string | null;
+  day_label: string | null;
+  started_at: string;
+  completed_at: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface WorkoutSessionSet {
+  id: string;
+  session_id: string;
+  exercise_name: string;
+  muscle_group: string | null;
+  set_number: number;
+  reps_done: number | null;
+  weight_kg: number | null;
+  rpe: number | null;
+  completed: boolean;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface FavoriteMeal {
+  id: string;
+  user_id: string;
+  name: string;
+  items_json: MealItem[];
+  total_calories: number | null;
+  total_protein_g: number | null;
+  total_carbs_g: number | null;
+  total_fat_g: number | null;
+  created_at: string;
+}
+
+export interface WaterLog {
+  id: string;
+  user_id: string;
+  amount_ml: number;
+  logged_at: string;
+  created_at: string;
+}
+
+export interface ExerciseFavorite {
+  user_id: string;
+  exercise_id: string;
+  created_at: string;
+}
+
+export interface Streak {
+  user_id: string;
+  current_streak: number;
+  longest_streak: number;
+  last_log_date: string | null;
+  updated_at: string;
 }

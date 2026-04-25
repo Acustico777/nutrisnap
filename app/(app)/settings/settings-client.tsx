@@ -2,9 +2,10 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { Copy, Check, LogOut, Plus, Shield, Calculator, Save, X, Trash2, ChevronDown, Target, Scale } from 'lucide-react';
+import { Copy, Check, LogOut, Plus, Shield, Calculator, Save, X, Trash2, ChevronDown, Target, Scale, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -591,6 +592,29 @@ export function SettingsClient({ profile, inviteCodes: initialCodes }: Props) {
             {applyingGoal ? 'Applicazione…' : 'Applica come obiettivi giornalieri'}
           </Button>
         )}
+
+        {/* Peso target + data */}
+        <Link
+          href="/profile/goal"
+          className="mt-3 flex items-center justify-between rounded-xl border border-border bg-muted/20 px-3 py-2.5 hover:border-primary-500/50 hover:bg-muted/40 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <Target className="h-4 w-4 text-primary-500" />
+            <div>
+              <p className="text-sm font-medium text-foreground">
+                {profile.target_weight_kg
+                  ? `Target: ${profile.target_weight_kg} kg`
+                  : 'Imposta peso target'}
+              </p>
+              <p className="text-[11px] text-muted-foreground">
+                {profile.goal_target_date
+                  ? `Entro il ${new Date(profile.goal_target_date).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })}`
+                  : 'Definisci una data obiettivo'}
+              </p>
+            </div>
+          </div>
+          <span className="text-xs text-primary-500">→</span>
+        </Link>
       </motion.div>
 
       {/* Peso ideale / BMI */}
@@ -639,6 +663,13 @@ export function SettingsClient({ profile, inviteCodes: initialCodes }: Props) {
                   </div>
                 )}
               </div>
+              <Link
+                href="/progress"
+                className="flex items-center gap-1.5 text-xs text-primary-500 hover:text-primary-400 transition-colors"
+              >
+                <TrendingUp className="h-3.5 w-3.5" />
+                Vedi grafico progressi →
+              </Link>
             </div>
           )}
         </motion.div>

@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { DashboardClient } from './dashboard-client';
-import type { Profile, Meal } from '@/lib/types';
+import type { Profile, Meal, WaterLog } from '@/lib/types';
 
 export default async function DashboardPage() {
   const supabase = createClient();
@@ -33,10 +33,20 @@ export default async function DashboardPage() {
     .lt('consumed_at', tomorrow.toISOString())
     .order('consumed_at', { ascending: false });
 
+  // Today's water logs
+  const { data: waterLogs } = await supabase
+    .from('water_logs')
+    .select('*')
+    .eq('user_id', user.id)
+    .gte('logged_at', today.toISOString())
+    .lt('logged_at', tomorrow.toISOString())
+    .order('logged_at', { ascending: true });
+
   return (
     <DashboardClient
       profile={profile as Profile}
       meals={(meals ?? []) as Meal[]}
+      waterLogs={(waterLogs ?? []) as WaterLog[]}
     />
   );
 }

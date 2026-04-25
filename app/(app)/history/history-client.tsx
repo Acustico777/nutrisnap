@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { CalendarDays } from 'lucide-react';
 import { MealCard } from '@/components/meal-card';
 import { formatDate, formatShortDate } from '@/lib/utils';
 import { MACRO_COLORS } from '@/lib/constants';
@@ -18,13 +20,24 @@ interface Props {
 
 export function HistoryClient({ meals: initialMeals }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const dateFilter = searchParams.get('date'); // YYYY-MM-DD or null
   const [range, setRange] = useState<Range>('week');
   const [meals, setMeals] = useState<Meal[]>(initialMeals);
 
-  // Filter meals by range
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - (range === 'week' ? 7 : 30));
-  const filtered = meals.filter((m) => new Date(m.consumed_at) >= cutoff);
+  // Filter meals by date or range
+  let filtered: Meal[];
+  if (dateFilter) {
+    filtered = meals.filter((m) => {
+      const d = new Date(m.consumed_at);
+      const ds = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      return ds === dateFilter;
+    });
+  } else {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - (range === 'week' ? 7 : 30));
+    filtered = meals.filter((m) => new Date(m.consumed_at) >= cutoff);
+  }
 
   // Build chart data
   const days = range === 'week' ? 7 : 30;
@@ -66,32 +79,108 @@ export function HistoryClient({ meals: initialMeals }: Props) {
     }
   }
 
+  function handleEdit(mealId: string) {
+    router.push(`/scan/edit/${mealId}`);
+  }
+
+  async function handleFavorite(mealId: string) {
+    const name = window.prompt('Nome del preferito:');
+    if (!name?.trim()) return;
+    const meal = meals.find((m) => m.id === mealId);
+    if (!meal) return;
+    try {
+      const res = await fetch('/api/favorite-meals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name.trim(),
+          items_json: meal.meal_items ?? [],
+          total_calories: meal.total_calories,
+          total_protein_g: meal.total_protein_g,
+          total_carbs_g: meal.total_carbs_g,
+          total_fat_g: meal.total_fat_g,
+        }),
+      });
+      if (!res.ok) throw new Error();
+      toast.success('Salvato tra i preferiti!');
+    } catch {
+      toast.error('Errore salvataggio preferito');
+    }
+  }
+
+  async function handleDuplicate(mealId: string) {
+    try {
+      const res = await fetch('/api/meals/duplicate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ source_meal_id: mealId }),
+      });
+      if (!res.ok) throw new Error();
+      toast.success('Pasto duplicato per oggi!');
+      router.refresh();
+    } catch {
+      toast.error('Errore duplicazione pasto');
+    }
+  }
+
   return (
     <div className="mx-auto max-w-md px-4 pt-8 space-y-5">
       <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-2xl font-bold text-foreground">Storico</h1>
-        <p className="text-sm text-muted-foreground">Analisi dei tuoi pasti</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Storico</h1>
+            <p className="text-sm text-muted-foreground">Analisi dei tuoi pasti</p>
+          </div>
+          <Link
+            href="/history/calendar"
+            className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-xs font-medium text-foreground hover:bg-muted/40 transition-colors"
+          >
+            <CalendarDays className="h-4 w-4 text-primary-500" />
+            Calendario
+          </Link>
+        </div>
       </motion.div>
 
-      {/* Range toggle */}
-      <div className="flex rounded-xl border border-border p-1 w-fit gap-1">
-        {(['week', 'month'] as Range[]).map((r) => (
+      {/* Date filter active indicator */}
+      {dateFilter && (
+        <motion.div
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-between rounded-xl border border-primary-500/30 bg-primary-500/10 px-3 py-2"
+        >
+          <span className="text-xs text-foreground">
+            Filtrato per: <strong>{new Date(dateFilter + 'T00:00:00').toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' })}</strong>
+          </span>
           <button
-            key={r}
-            onClick={() => setRange(r)}
-            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-              range === r
-                ? 'bg-primary-500 text-white'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
+            onClick={() => router.push('/history')}
+            className="text-xs text-primary-500 hover:underline"
           >
-            {r === 'week' ? 'Settimana' : 'Mese'}
+            Rimuovi
           </button>
-        ))}
-      </div>
+        </motion.div>
+      )}
 
-      {/* Chart */}
-      <motion.div
+      {/* Range toggle (hidden when date filter active) */}
+      {!dateFilter && (
+        <div className="flex rounded-xl border border-border p-1 w-fit gap-1">
+          {(['week', 'month'] as Range[]).map((r) => (
+            <button
+              key={r}
+              onClick={() => setRange(r)}
+              className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                range === r
+                  ? 'bg-primary-500 text-white'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {r === 'week' ? 'Settimana' : 'Mese'}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Chart (hidden when date filter active) */}
+      {!dateFilter && <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
@@ -129,7 +218,7 @@ export function HistoryClient({ meals: initialMeals }: Props) {
             </Bar>
           </BarChart>
         </ResponsiveContainer>
-      </motion.div>
+      </motion.div>}
 
       {/* Grouped meal list */}
       <div className="space-y-5">
@@ -155,7 +244,14 @@ export function HistoryClient({ meals: initialMeals }: Props) {
             <AnimatePresence>
               <div className="space-y-2">
                 {dayMeals.map((meal) => (
-                  <MealCard key={meal.id} meal={meal} onDelete={handleDelete} />
+                  <MealCard
+                    key={meal.id}
+                    meal={meal}
+                    onDelete={handleDelete}
+                    onEdit={handleEdit}
+                    onFavorite={handleFavorite}
+                    onDuplicate={handleDuplicate}
+                  />
                 ))}
               </div>
             </AnimatePresence>

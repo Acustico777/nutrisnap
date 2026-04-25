@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Pencil, Star, Copy } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { formatTime, getMealTypeLabel } from '@/lib/utils';
 import type { Meal } from '@/lib/types';
@@ -9,9 +9,12 @@ import type { Meal } from '@/lib/types';
 interface MealCardProps {
   meal: Meal;
   onDelete?: (id: string) => void;
+  onEdit?: (mealId: string) => void;
+  onFavorite?: (mealId: string) => void;
+  onDuplicate?: (mealId: string) => void;
 }
 
-export function MealCard({ meal, onDelete }: MealCardProps) {
+export function MealCard({ meal, onDelete, onEdit, onFavorite, onDuplicate }: MealCardProps) {
   return (
     <motion.div
       layout
@@ -48,7 +51,12 @@ export function MealCard({ meal, onDelete }: MealCardProps) {
           </span>
         </div>
         <p className="mt-0.5 text-sm font-semibold text-foreground truncate">
-          {meal.notes ?? getMealTypeLabel(meal.meal_type)}
+          {meal.notes ??
+            (meal.meal_items && meal.meal_items.length > 0
+              ? meal.meal_items.length === 1
+                ? meal.meal_items[0]!.name
+                : `${meal.meal_items[0]!.name} +${meal.meal_items.length - 1}`
+              : getMealTypeLabel(meal.meal_type))}
         </p>
         <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
           <span className="font-bold text-foreground">{Math.round(meal.total_calories)} kcal</span>
@@ -58,16 +66,45 @@ export function MealCard({ meal, onDelete }: MealCardProps) {
         </div>
       </div>
 
-      {/* Delete */}
-      {onDelete && (
-        <button
-          onClick={() => onDelete(meal.id)}
-          className="flex-shrink-0 rounded-xl p-2 text-muted-foreground hover:text-red-400 hover:bg-red-950/30 transition-colors"
-          aria-label="Elimina pasto"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
-      )}
+      {/* Actions */}
+      <div className="flex flex-col gap-1 flex-shrink-0">
+        {onEdit && (
+          <button
+            onClick={() => onEdit(meal.id)}
+            className="rounded-xl p-1.5 text-muted-foreground hover:text-blue-400 hover:bg-blue-950/30 transition-colors"
+            aria-label="Modifica pasto"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </button>
+        )}
+        {onFavorite && (
+          <button
+            onClick={() => onFavorite(meal.id)}
+            className="rounded-xl p-1.5 text-muted-foreground hover:text-yellow-400 hover:bg-yellow-950/30 transition-colors"
+            aria-label="Salva tra preferiti"
+          >
+            <Star className="h-3.5 w-3.5" />
+          </button>
+        )}
+        {onDuplicate && (
+          <button
+            onClick={() => onDuplicate(meal.id)}
+            className="rounded-xl p-1.5 text-muted-foreground hover:text-green-400 hover:bg-green-950/30 transition-colors"
+            aria-label="Duplica pasto"
+          >
+            <Copy className="h-3.5 w-3.5" />
+          </button>
+        )}
+        {onDelete && (
+          <button
+            onClick={() => onDelete(meal.id)}
+            className="rounded-xl p-1.5 text-muted-foreground hover:text-red-400 hover:bg-red-950/30 transition-colors"
+            aria-label="Elimina pasto"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
     </motion.div>
   );
 }

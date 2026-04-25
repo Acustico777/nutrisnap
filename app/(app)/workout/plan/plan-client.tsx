@@ -5,10 +5,10 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { ClipboardList, Download, RefreshCw, Dumbbell, ChevronRight } from 'lucide-react';
+import { ClipboardList, Download, RefreshCw, Dumbbell, ChevronRight, Play, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GOAL_LABELS } from '@/lib/nutrition';
-import type { Profile, WorkoutPlan } from '@/lib/types';
+import type { Profile, WorkoutPlan, WorkoutSession } from '@/lib/types';
 
 interface Props {
   plan: WorkoutPlan | null;
@@ -27,6 +27,33 @@ export function PlanViewClient({ plan: initialPlan, profile }: Props) {
   const [plan] = useState<WorkoutPlan | null>(initialPlan);
   const [deleting, setDeleting] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState(false);
+  const [startingDay, setStartingDay] = useState<string | null>(null);
+
+  async function handleStartSession(day: WorkoutPlan['plan_data']['days'][number]) {
+    if (!plan || startingDay !== null) return;
+    setStartingDay(day.day_label);
+    try {
+      const res = await fetch('/api/workout-sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          plan_id: plan.id,
+          day_label: day.day_label,
+          exercises: day.exercises.map((ex) => ({
+            exercise_name: ex.exercise_name,
+            muscle_group: ex.muscle_group,
+            sets: ex.sets,
+          })),
+        }),
+      });
+      const data = await res.json() as { session: WorkoutSession; error?: string };
+      if (!res.ok || data.error) throw new Error(data.error ?? 'Errore creazione sessione');
+      router.push(`/workout/session/${data.session.id}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Errore durante la creazione della sessione');
+      setStartingDay(null);
+    }
+  }
 
   async function handleDelete() {
     if (!plan) return;
@@ -124,7 +151,22 @@ export function PlanViewClient({ plan: initialPlan, profile }: Props) {
           >
             {/* Day header */}
             <div className="bg-muted/30 px-4 py-3 border-b border-border">
-              <h3 className="text-sm font-bold text-foreground">{day.day_label}</h3>
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-sm font-bold text-foreground">{day.day_label}</h3>
+                <button
+                  type="button"
+                  onClick={() => handleStartSession(day)}
+                  disabled={startingDay !== null}
+                  className="flex items-center gap-1.5 rounded-lg bg-primary-500 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-primary-500/90 transition-colors disabled:opacity-60 flex-shrink-0"
+                >
+                  {startingDay === day.day_label ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Play className="h-3 w-3" />
+                  )}
+                  Inizia
+                </button>
+              </div>
               {day.muscle_focus.length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-1.5">
                   {day.muscle_focus.map((m) => (

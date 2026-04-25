@@ -34,6 +34,14 @@ export function calculateBMR({
   return Math.round(bmr);
 }
 
+/**
+ * Katch-McArdle formula: BMR = 370 + 21.6 × leanMassKg
+ * Da usare quando si conosce la massa magra (lean body mass).
+ */
+export function calculateBMRKatch(leanMassKg: number): number {
+  return Math.round(370 + 21.6 * leanMassKg);
+}
+
 export function calculateTDEE(bmr: number, activity: ActivityLevel): number {
   return Math.round(bmr * ACTIVITY_MULTIPLIERS[activity]);
 }
