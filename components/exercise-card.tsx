@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Star } from 'lucide-react';
 import type { Exercise } from '@/lib/types';
 
@@ -31,9 +31,29 @@ interface Props {
 }
 
 export function ExerciseCard({ exercise, isFavorite, onToggleFavorite }: Props) {
-  const [imgSrc, setImgSrc] = useState<string>(
-    exercise.gif_url ?? '/exercises/placeholder.svg'
-  );
+  // free-exercise-db URLs end with "/0.jpg"; we alternate with "/1.jpg" to fake a GIF.
+  const frames = useMemo<string[]>(() => {
+    const url = exercise.gif_url;
+    if (!url) return ['/exercises/placeholder.svg'];
+    if (url.endsWith('/0.jpg')) {
+      return [url, url.replace(/\/0\.jpg$/, '/1.jpg')];
+    }
+    return [url];
+  }, [exercise.gif_url]);
+
+  const [frameIdx, setFrameIdx] = useState(0);
+  const [imgError, setImgError] = useState(false);
+
+  useEffect(() => {
+    if (frames.length < 2) return;
+    const id = setInterval(() => {
+      setFrameIdx((i) => (i + 1) % frames.length);
+    }, 700);
+    return () => clearInterval(id);
+  }, [frames.length]);
+
+  const imgSrc = imgError ? '/exercises/placeholder.svg' : frames[frameIdx]!;
+
   const [localFavorite, setLocalFavorite] = useState<boolean>(isFavorite ?? false);
 
   // Keep in sync if parent prop changes
@@ -55,7 +75,7 @@ export function ExerciseCard({ exercise, isFavorite, onToggleFavorite }: Props) 
           src={imgSrc}
           alt={exercise.name_it}
           loading="lazy"
-          onError={() => setImgSrc('/exercises/placeholder.svg')}
+          onError={() => setImgError(true)}
           className="w-full h-full object-cover"
         />
         {showStar && (
